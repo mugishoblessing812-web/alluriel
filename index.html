@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALLURIEL — Gestion Église Premium</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ÉCRAN DE CONNEXION -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="brand-block">
+                <img src="logo.png" alt="ALLURIEL" class="brand-logo">
+                <p class="brand-tagline">Gestion Église Premium · par NDAGANO</p>
+            </div>
+            <form onsubmit="handleLogin(); return false;" class="login-form">
+                <div class="form-group-login">
+                    <label>Nom d'utilisateur</label>
+                    <input type="text" id="usernameInput" placeholder="Entrez votre nom" required>
+                </div>
+                <div class="form-group-login">
+                    <label>Mot de passe</label>
+                    <input type="password" id="passwordInput" placeholder="Entrez votre mot de passe" required>
+                </div>
+                <button type="submit" class="btn-login">🔐 Connexion</button>
+            </form>
+            <div class="login-footer">
+                <p>Première visite ? <a href="#" onclick="showRegisterModal(); return false;">Créer un compte client</a></p>
+                <p class="hidden-admin-hint">Combinaison clavier <code>Ctrl+Shift+A</code> pour le mode administrateur.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADMIN CACHÉ -->
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdminLogin()">&times;</span>
+            <h2>🛡️ Accès Administrateur ALLURIEL</h2>
+            <form onsubmit="handleAdminLogin(); return false;" class="login-form">
+                <div class="form-group-login">
+                    <label>Identifiant admin</label>
+                    <input type="text" id="adminUserInput" required>
+                </div>
+                <div class="form-group-login">
+                    <label>Mot de passe admin</label>
+                    <input type="password" id="adminPassInput" required>
+                </div>
+                <div class="form-group-login">
+                    <label>Code secret</label>
+                    <input type="password" id="adminSecretInput" placeholder="Code interne ALLURIEL" required>
+                </div>
+                <button type="submit" class="btn-login">🔓 Entrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL D'INSCRIPTION -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRegisterModal()">&times;</span>
+            <h2>📝 Créer un compte client</h2>
+            <form onsubmit="handleRegister(); return false;" class="login-form">
+                <div class="form-group-login"><label>Nom de l'église</label><input type="text" id="egliseNameInput" required></div>
+                <div class="form-group-login"><label>Nom d'utilisateur</label><input type="text" id="registerUsernameInput" required></div>
+                <div class="form-group-login"><label>Email</label><input type="email" id="registerEmailInput" required></div>
+                <div class="form-group-login"><label>Mot de passe</label><input type="password" id="registerPasswordInput" required></div>
+                <div class="form-group-login"><label>Confirmer mot de passe</label><input type="password" id="registerPasswordConfirmInput" required></div>
+                <button type="submit" class="btn-login">✅ Créer mon compte</button>
+                <p class="muted">⚠️ Votre compte sera activé après paiement (15 USD) et validation par l'administrateur.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION PRINCIPALE -->
+    <div id="mainApp" class="main-app" style="display: none;">
+        <div class="container">
+            <nav class="navbar">
+                <div class="navbar-left">
+                    <img src="logo.png" alt="ALLURIEL" class="navbar-logo">
+                    <div>
+                        <h1>Gestion Église</h1>
+                        <span id="userInfo" class="user-info"></span>
+                    </div>
+                </div>
+                <div class="nav-buttons" id="navButtons"></div>
+                <div class="navbar-right">
+                    <button onclick="showUserMenu()" class="btn-user-menu">⚙️ <span id="currentUser"></span></button>
+                    <div id="userMenu" class="user-menu" style="display: none;">
+                        <a href="#" onclick="showChangePasswordModal(); return false;">🔑 Changer le mot de passe</a>
+                        <a href="#" onclick="handleLogout(); return false;">🚪 Déconnexion</a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="settings-bar no-print">
+                <label>Devise :</label>
+                <select id="deviseSelect" onchange="changeDevise()">
+                    <option value="USD">$ USD</option><option value="FRF">F FRF</option>
+                    <option value="EUR">€ EUR</option><option value="XAF">F XAF</option>
+                </select>
+                <span id="deviseActuelle">Devise : $ USD</span>
+            </div>
+
+            <!-- TABLEAU DE BORD -->
+            <div id="dashboard" class="module">
+                <h2>🏠 Tableau de bord</h2>
+                <div class="stats-grid" id="dashboardStats"></div>
+                <div class="card-grid">
+                    <div class="stat-card"><h3>Bienvenue</h3><p id="welcomeText"></p></div>
+                </div>
+            </div>
+
+            <!-- MEMBRES -->
+            <div id="membres" class="module">
+                <h2>👤 Membres</h2>
+                <form onsubmit="addMembre(); return false;" class="form-group">
+                    <input type="text" id="nomMembre" placeholder="Nom complet" required>
+                    <input type="email" id="emailMembre" placeholder="Email">
+                    <input type="tel" id="telMembre" placeholder="Téléphone">
+                    <input type="date" id="dateNaissanceMembre" placeholder="Date de naissance">
+                    <input type="text" id="adresseMembre" placeholder="Adresse">
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="membreTable" class="table"><thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Né(e) le</th><th>Adresse</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="countMembres">0</strong></p>
+            </div>
+
+            <!-- DÎME -->
+            <div id="dime" class="module">
+                <h2>💰 Dîmes</h2>
+                <form onsubmit="addDime(); return false;" class="form-group">
+                    <input type="text" id="nomDime" placeholder="Nom du donneur" required>
+                    <input type="number" id="montantDime" placeholder="Montant" step="0.01" required>
+                    <input type="date" id="dateDime" required>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="dimeTable" class="table"><thead><tr><th>Donneur</th><th>Montant</th><th>Date</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="totalDime">0</strong></p>
+            </div>
+
+            <!-- OFFRANDE -->
+            <div id="offrande" class="module">
+                <h2>🙏 Offrandes</h2>
+                <form onsubmit="addOffrande(); return false;" class="form-group">
+                    <input type="text" id="nomOffrande" placeholder="Nom" required>
+                    <input type="number" id="montantOffrande" placeholder="Montant" step="0.01" required>
+                    <input type="date" id="dateOffrande" required>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="offrandeTable" class="table"><thead><tr><th>Donneur</th><th>Montant</th><th>Date</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="totalOffrande">0</strong></p>
+            </div>
+
+            <!-- GROUPE -->
+            <div id="groupe" class="module">
+                <h2>👥 Groupes</h2>
+                <form onsubmit="addGroupe(); return false;" class="form-group">
+                    <input type="text" id="nomGroupe" placeholder="Nom du groupe" required>
+                    <input type="text" id="responsableGroupe" placeholder="Responsable" required>
+                    <input type="number" id="membresGroupe" placeholder="Nombre de membres" min="0">
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <div id="groupeList" class="card-grid"></div>
+            </div>
+
+            <!-- PLAN -->
+            <div id="plan" class="module">
+                <h2>📋 Plans pastoraux</h2>
+                <form onsubmit="addPlan(); return false;" class="form-group">
+                    <input type="text" id="titrePlan" placeholder="Titre" required>
+                    <textarea id="descPlan" placeholder="Description" rows="2"></textarea>
+                    <input type="date" id="datePlan" required>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <div id="planList" class="card-grid"></div>
+            </div>
+
+            <!-- ÉVÉNEMENT -->
+            <div id="evenement" class="module">
+                <h2>🎉 Événements</h2>
+                <form onsubmit="addEvenement(); return false;" class="form-group">
+                    <input type="text" id="nomEvenement" placeholder="Nom" required>
+                    <textarea id="descEvenement" placeholder="Description" rows="2"></textarea>
+                    <input type="date" id="dateEvenement" required>
+                    <input type="time" id="heureEvenement">
+                    <input type="text" id="lieuEvenement" placeholder="Lieu" required>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <div id="evenementList" class="card-grid"></div>
+            </div>
+
+            <!-- CIMETIÈRE -->
+            <div id="cimetiere" class="module">
+                <h2>⛑️ Cimetière</h2>
+                <form onsubmit="addInhumation(); return false;" class="form-group">
+                    <input type="text" id="nomDefunt" placeholder="Nom du défunt" required>
+                    <input type="date" id="dateNaissance" placeholder="Date de naissance">
+                    <input type="date" id="dateInhumation" required>
+                    <input type="text" id="sectionCimetiere" placeholder="Section / Tombe" required>
+                    <input type="text" id="familleDefunt" placeholder="Famille" required>
+                    <textarea id="remarqueCimetiere" placeholder="Remarques" rows="2"></textarea>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="cimetiereTa" class="table"><thead><tr><th>Défunt</th><th>Né le</th><th>Inhumé le</th><th>Section</th><th>Famille</th><th>Remarques</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="countCimetiere">0</strong></p>
+            </div>
+
+            <!-- BAPTÊME -->
+            <div id="bapteme" class="module">
+                <h2>💧 Baptêmes</h2>
+                <form onsubmit="addBapteme(); return false;" class="form-group">
+                    <input type="text" id="nomBaptise" placeholder="Nom du baptisé" required>
+                    <input type="date" id="dateNaissanceBaptise" placeholder="Date de naissance" required>
+                    <input type="date" id="dateBapteme" required>
+                    <input type="text" id="parrainBapteme" placeholder="Parrain/Marraine" required>
+                    <input type="text" id="pastorBapteme" placeholder="Pasteur" required>
+                    <textarea id="remarqueBapteme" placeholder="Remarques" rows="2"></textarea>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="baptemeTable" class="table"><thead><tr><th>Baptisé</th><th>Né le</th><th>Âge</th><th>Date</th><th>Parrain</th><th>Pasteur</th><th>Remarques</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="countBapteme">0</strong></p>
+            </div>
+
+            <!-- MARIAGE -->
+            <div id="mariage" class="module">
+                <h2>💒 Mariages</h2>
+                <form onsubmit="addMariage(); return false;" class="form-group">
+                    <input type="text" id="nomEpoux" placeholder="Nom de l'époux" required>
+                    <input type="date" id="dateNaissanceEpoux" placeholder="Date de naissance époux" required>
+                    <input type="text" id="nomEpouse" placeholder="Nom de l'épouse" required>
+                    <input type="date" id="dateNaissanceEpouse" placeholder="Date de naissance épouse" required>
+                    <input type="date" id="dateMariage" required>
+                    <input type="text" id="pastorMariage" placeholder="Pasteur célébrant" required>
+                    <input type="text" id="temoins" placeholder="Témoins" required>
+                    <textarea id="remarqueMariage" placeholder="Remarques" rows="2"></textarea>
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="mariageTable" class="table"><thead><tr><th>Époux</th><th>Né le</th><th>Épouse</th><th>Née le</th><th>Date</th><th>Pasteur</th><th>Témoins</th><th>Remarques</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="countMariage">0</strong></p>
+            </div>
+
+            <!-- DISCOMMUNION -->
+            <div id="discommunion" class="module">
+                <h2>⛔ Discommunion (excommunications & réintégrations)</h2>
+                <form onsubmit="addDiscommunion(); return false;" class="form-group">
+                    <input type="text" id="nomDiscom" placeholder="Nom du membre" required>
+                    <input type="date" id="dateDiscom" required>
+                    <select id="typeDiscom" required>
+                        <option value="">-- Type --</option>
+                        <option value="Discommunion">Discommunion</option>
+                        <option value="Réintégration">Réintégration</option>
+                    </select>
+                    <input type="text" id="motifDiscom" placeholder="Motif" required>
+                    <input type="text" id="decideurDiscom" placeholder="Décidé par" required>
+                    <textarea id="remarqueDiscom" placeholder="Observations" rows="2"></textarea>
+                    <button type="submit" class="btn-add">➕ Enregistrer</button>
+                </form>
+                <table id="discomTable" class="table"><thead><tr><th>Membre</th><th>Date</th><th>Type</th><th>Motif</th><th>Décidé par</th><th>Observations</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Total : <strong id="countDiscom">0</strong></p>
+            </div>
+
+            <!-- PROCÈS-VERBAUX (réunions) -->
+            <div id="pv" class="module">
+                <h2>📝 Procès-verbaux des réunions</h2>
+                <form onsubmit="addPV(); return false;" class="form-group">
+                    <input type="text" id="titrePV" placeholder="Titre / Objet de la réunion" required>
+                    <input type="date" id="datePV" required>
+                    <input type="text" id="lieuPV" placeholder="Lieu">
+                    <input type="text" id="presidentPV" placeholder="Président de séance">
+                    <input type="text" id="secretairePV" placeholder="Secrétaire">
+                    <textarea id="ordreJourPV" placeholder="Ordre du jour" rows="2"></textarea>
+                    <textarea id="contenuPV" placeholder="Contenu / délibérations" rows="4" required></textarea>
+                    <textarea id="decisionsPV" placeholder="Décisions prises" rows="2"></textarea>
+                    <button type="submit" class="btn-add">➕ Enregistrer le PV</button>
+                </form>
+
+                <h3 style="margin-top:20px;">Participants</h3>
+                <p class="muted">Saisissez ici la liste des personnes attendues. Vous pourrez marquer leur statut sur le PV en cours.</p>
+                <div class="form-group">
+                    <input type="text" id="newParticipantName" placeholder="Nom du participant">
+                    <button class="btn-add" onclick="addParticipantToCurrent()">➕ Ajouter participant</button>
+                </div>
+                <div id="participantsBox" class="participants-box"></div>
+
+                <h3 style="margin-top:20px;">Liste des PV</h3>
+                <div id="pvList" class="card-grid"></div>
+            </div>
+
+            <!-- ŒUVRES SOCIALES & ÉCONOMIQUES -->
+            <div id="oeuvres" class="module">
+                <h2>🌍 Œuvres sociales & économiques</h2>
+                <form onsubmit="addOeuvre(); return false;" class="form-group">
+                    <input type="text" id="nomOeuvre" placeholder="Nom du projet / business" required>
+                    <select id="categorieOeuvre" required>
+                        <option value="">-- Catégorie --</option>
+                        <option value="Social">🤝 Social (aide, santé, éducation...)</option>
+                        <option value="Économique">💼 Économique (business, projet rentable)</option>
+                        <option value="Agricole">🌱 Agricole</option>
+                        <option value="Artisanal">🛠️ Artisanal</option>
+                        <option value="Autre">📌 Autre</option>
+                    </select>
+                    <input type="text" id="responsableOeuvre" placeholder="Responsable" required>
+                    <input type="number" id="budgetOeuvre" placeholder="Budget" step="0.01">
+                    <input type="number" id="revenuOeuvre" placeholder="Revenu / impact" step="0.01">
+                    <input type="date" id="dateDebutOeuvre" placeholder="Date début">
+                    <select id="statutOeuvre">
+                        <option value="En cours">En cours</option>
+                        <option value="Planifié">Planifié</option>
+                        <option value="Terminé">Terminé</option>
+                        <option value="Suspendu">Suspendu</option>
+                    </select>
+                    <textarea id="descOeuvre" placeholder="Description" rows="3"></textarea>
+                    <button type="submit" class="btn-add">➕ Enregistrer</button>
+                </form>
+                <table id="oeuvreTable" class="table"><thead><tr><th>Projet</th><th>Catégorie</th><th>Responsable</th><th>Budget</th><th>Revenu</th><th>Début</th><th>Statut</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <p>Budget total : <strong id="totalBudgetOeuvre">0</strong> · Revenu total : <strong id="totalRevenuOeuvre">0</strong></p>
+            </div>
+
+            <!-- OBJETS -->
+            <div id="objets" class="module">
+                <h2>📦 Objets de l'église</h2>
+                <form onsubmit="addObjet(); return false;" class="form-group">
+                    <input type="text" id="nomObjet" placeholder="Nom" required>
+                    <textarea id="descObjet" placeholder="Description" rows="2"></textarea>
+                    <select id="typeObjet" required>
+                        <option value="">-- Type --</option>
+                        <option value="Mobilier">Mobilier</option><option value="Équipement">Équipement</option>
+                        <option value="Décoration">Décoration</option><option value="Livre">Livre</option>
+                        <option value="Instrument">Instrument</option><option value="Autre">Autre</option>
+                    </select>
+                    <input type="number" id="quantiteObjet" value="1" min="0" required>
+                    <input type="date" id="dateAcquisitionObjet">
+                    <button type="submit" class="btn-add">➕ Ajouter</button>
+                </form>
+                <table id="objetTable" class="table"><thead><tr><th>Objet</th><th>Type</th><th>Description</th><th>Qté</th><th>Acquis le</th><th>Action</th></tr></thead><tbody></tbody></table>
+            </div>
+
+            <!-- STATISTIQUES -->
+            <div id="stats" class="module">
+                <h2>📊 Statistiques</h2>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+
+            <!-- RAPPORTS -->
+            <div id="reports" class="module">
+                <h2>📄 Rapports & Impression</h2>
+                <div class="report-controls no-print">
+                    <select id="reportType">
+                        <option value="monthly">Rapport mensuel</option>
+                        <option value="yearly">Rapport annuel</option>
+                        <option value="full">Rapport complet</option>
+                    </select>
+                    <input type="month" id="reportMonth">
+                    <input type="number" id="reportYear" placeholder="Année (ex: 2026)" min="2000" max="2100">
+                    <button class="btn-add" onclick="generateReport()">📊 Générer</button>
+                    <button class="btn-add" onclick="printReport()">🖨️ Imprimer / PDF</button>
+                </div>
+                <div id="reportContent" class="report-output"></div>
+            </div>
+
+            <!-- LICENCE -->
+            <div id="licence" class="module">
+                <h2>🔑 Ma Licence</h2>
+                <div id="licenceStatus" class="licence-card"></div>
+                <h3>Demander / activer ma licence (15 USD)</h3>
+                <p class="muted">Payez 15 USD via Airtel Money ou Orange Money sur le numéro de votre administrateur, puis renseignez la référence ci-dessous. L'administrateur validera et vous attribuera votre clé.</p>
+                <form onsubmit="submitManualPayment(); return false;" class="form-group">
+                    <select id="paymentMethod" required>
+                        <option value="">-- Mode de paiement --</option>
+                        <option value="AIRTEL_MONEY">📱 Airtel Money</option>
+                        <option value="ORANGE_MONEY">🟠 Orange Money</option>
+                    </select>
+                    <input type="tel" id="paymentPhone" placeholder="Votre numéro" required>
+                    <input type="text" id="paymentReference" placeholder="Référence de transaction" required>
+                    <input type="number" id="paymentAmount" value="15" step="0.01">
+                    <button type="submit" class="btn-add">📤 Envoyer ma demande</button>
+                </form>
+                <h3>Activer une clé reçue</h3>
+                <div class="form-group">
+                    <input type="text" id="manualLicenseKey" placeholder="Collez votre clé de licence">
+                    <button class="btn-add" onclick="activateManualKey()">✅ Activer</button>
+                </div>
+                <div id="myRequests"></div>
+            </div>
+
+            <!-- ===== MODULES ADMIN ===== -->
+            <div id="admin" class="module">
+                <h2>⚙️ Tableau ALLURIEL</h2>
+                <div class="stats-grid" id="adminStats"></div>
+            </div>
+            <div id="users" class="module">
+                <h2>👥 Utilisateurs / Clients</h2>
+                <table id="userTable" class="table"><thead><tr><th>Utilisateur</th><th>Email</th><th>Église</th><th>Rôle</th><th>Statut</th><th>Licence</th><th>Action</th></tr></thead><tbody></tbody></table>
+            </div>
+            <div id="licenses" class="module">
+                <h2>🔑 Demandes & Licences</h2>
+                <h3>Demandes en attente</h3>
+                <div id="pendingLicenseList"></div>
+                <h3 style="margin-top:20px;">Toutes les licences</h3>
+                <table id="licenseTable" class="table"><thead><tr><th>Clé</th><th>Client</th><th>Église</th><th>Mode</th><th>Référence</th><th>Statut</th><th>Date</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL changement de mot de passe -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeChangePasswordModal()">&times;</span>
+            <h2>🔑 Changer mon mot de passe</h2>
+            <form onsubmit="handleChangePassword(); return false;" class="login-form">
+                <div class="form-group-login"><label>Actuel</label><input type="password" id="currentPasswordInput" required></div>
+                <div class="form-group-login"><label>Nouveau</label><input type="password" id="newPasswordInput" required></div>
+                <div class="form-group-login"><label>Confirmer</label><input type="password" id="confirmNewPasswordInput" required></div>
+                <button type="submit" class="btn-login">✅ Mettre à jour</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="main.js"></script>
+    <script src="extras.js"></script>
+    <script src="licence-ui.js"></script>
+    <script src="reports.js"></script>
+</body>
+</html>
